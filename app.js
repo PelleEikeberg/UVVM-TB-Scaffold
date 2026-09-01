@@ -55,7 +55,9 @@ const defaultState = {
 
 let state = structuredClone(defaultState);
 let activeFile = "tb";
-let codeTheme = "dark";
+let codeTheme = "light";
+let pendingPlacement = null;
+let activePaintColor = null;
 let toastTimer;
 
 const $ = (selector) => document.querySelector(selector);
@@ -76,6 +78,7 @@ const selectedActiveCount = () => state.selected.filter((item) => item.id !== "a
 const streamRole = (item) => item.role === "sink" ? "sink" : "source";
 const vipColor = (item) => vipColors.includes(item.color) ? item.color : "amber";
 const placementNames = ["left", "right", "over", "under", "th", "tb"];
+const placementLabels = { th: "TH free", over: "SW interface", left: "Input", right: "Output", under: "Supplementary", tb: "TB free" };
 const placementForLegacyItem = (item) => {
   if (placementNames.includes(item.placement)) return item.placement;
   if (item.id === "clock_generator") return "th";
@@ -132,7 +135,7 @@ function renderArchitectureMap() {
       <div class="vvc-controls">${roleControl}${assertionControl}${instanceControl}</div>
     </div>`;
   };
-  const dropZone = (placement, label) => `<div class="drop-zone drop-zone-${placement}" data-drop-zone="${placement}"><span class="drop-label">${label}</span><div class="placed-vvcs">${placed(placement).map((item) => vvcNode(item, placement)).join("")}</div><span class="drop-plus" title="Drag a VIP here" aria-label="Drag a VIP here">+</span></div>`;
+  const dropZone = (placement, label) => `<div class="drop-zone drop-zone-${placement}${pendingPlacement === placement ? " placement-target" : ""}" data-drop-zone="${placement}"><span class="drop-label">${label}</span><div class="placed-vvcs">${placed(placement).map((item) => vvcNode(item, placement)).join("")}</div><button type="button" class="drop-plus" data-drop-plus="${placement}" title="Choose a VIP to add here" aria-label="Choose a VIP to add here">+</button></div>`;
 
   map.innerHTML = `<div class="tb-frame">
     <span class="frame-label tb-label">TESTBENCH</span>
@@ -160,7 +163,6 @@ function refreshForm() {
   $("#clock-period").value = state.clockPeriod;
   $("#clock-high-time").value = state.clockHighTime;
   $("#watchdog-timeout").value = state.watchdogTimeout;
-  $("#include-clock").checked = state.includeClock;
   $("#include-reset").checked = state.includeReset;
   $("#include-activity-watchdog").checked = state.includeActivityWatchdog;
   $("#include-scoreboard").checked = state.includeScoreboard;
@@ -204,6 +206,9 @@ function watchdogBlock() {
 function buildTb() {
   const name = projectIdentifier();
   const thName = `${name}_th`;
+  const tbItems = activeVipItems().filter((item) => item.placement === "tb");
+  const tbSignals = tbItems.length ? `\n${signalDeclarationsFor("tb")}` : "";
+  const tbVvcBlocks = vipBlocksFor("tb");
   const clockStart = hasClock() ? `
     -- Start the clock VVC before the first transaction.
     start_clock(CLOCK_GENERATOR_VVCT, 1, "Start clock");` : "";
@@ -222,6 +227,7 @@ architecture func of ${name}_tb is
   constant C_SCOPE : string := C_TB_SCOPE_DEFAULT;
   constant C_CLK_PERIOD : time := ${timeValue(state.clockPeriod, "ns")};
   constant C_CLK_HIGH_TIME : time := ${timeValue(state.clockHighTime, "ns")};
+${tbSignals}
 ${watchdogBlock()}
 
 begin
@@ -231,6 +237,8 @@ begin
       GC_CLK_HIGH_TIME             => C_CLK_HIGH_TIME,
       GC_ACTIVITY_WATCHDOG_TIMEOUT => ${timeValue(state.watchdogTimeout, "ms")}
     );
+
+${tbVvcBlocks || "  -- TODO: Add one or more TB-free VVC instances here."}
 
   p_sequencer : process
   begin
@@ -250,10 +258,11 @@ end architecture func;
 `;
 }
 
-function signalDeclarations() {
+function signalDeclarationsFor(...placements) {
   const lines = ["  signal clk : std_logic := '0';"];
-  if (state.includeReset) lines.push("  signal arst : std_logic := '0';");
-  state.selected.forEach((item) => {
+  const selectedItems = placements.length ? activeVipItems().filter((item) => placements.includes(item.placement)) : activeVipItems();
+  if (state.includeReset && (!placements.length || placements.some((placement) => placement !== "tb"))) lines.push("  signal arst : std_logic := '0';");
+  selectedItems.forEach((item) => {
     const suffix = `_${item.index}`;
     if (item.id === "uart") {
       lines.push(`  signal uart_${item.index}_rx : std_logic := '1';`);
@@ -290,6 +299,10 @@ function signalDeclarations() {
     }
   });
   return lines.join("\n");
+}
+
+function signalDeclarations() {
+  return signalDeclarationsFor("th", "over", "left", "right", "under");
 }
 
 function clockInstance(item) {
@@ -493,7 +506,7 @@ function modelBlock() {
 function buildTh() {
   const name = projectIdentifier();
   const beforeDut = vipBlocksFor("th", "over", "left");
-  const afterDut = vipBlocksFor("right", "under", "tb");
+  const afterDut = vipBlocksFor("right", "under");
   const watchdog = state.includeActivityWatchdog ? `
   p_activity_watchdog : activity_watchdog(
     timeout     => GC_ACTIVITY_WATCHDOG_TIMEOUT,
@@ -517,7 +530,9 @@ begin
   i_ti_uvvm_engine : entity uvvm_vvc_framework.ti_uvvm_engine;
 ${resetBlock()}
 ${beforeDut || "  -- TODO: Add one or more VVC instances from the UVVM VIP libraries."}
+
 ${dutBlock()}
+
 ${afterDut}
 ${watchdog}
 ${modelBlock()}
@@ -530,6 +545,17 @@ function updatePreview() {
   $("#code-preview").innerHTML = highlightGeneratedCode(text);
 }
 
+function setCodeTheme(theme) {
+  codeTheme = theme;
+  const previewPanel = $(".preview-panel");
+  const codeThemeToggle = $("#code-theme-toggle");
+  const isLight = codeTheme === "light";
+  previewPanel.classList.toggle("code-theme-light", isLight);
+  codeThemeToggle.textContent = isLight ? "Dark" : "Light";
+  codeThemeToggle.title = `Switch code preview to ${isLight ? "dark" : "light"} theme`;
+  codeThemeToggle.setAttribute("aria-pressed", String(isLight));
+}
+
 function escapeHtml(value) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
@@ -537,15 +563,16 @@ function escapeHtml(value) {
 function highlightGeneratedCode(text) {
   let output = escapeHtml(text);
   const markers = [];
-  if (activeFile === "th") {
-    activeVipItems().forEach((item, index) => {
-      const snippet = escapeHtml(vipGeneratedBlock(item));
-      const marker = `__VIP_BLOCK_${index}__`;
-      if (!output.includes(snippet)) return;
-      output = output.replace(snippet, marker);
-      markers.push({ marker, snippet: highlightVipBlock(snippet, vipColor(item)), color: vipColor(item) });
-    });
-  }
+  activeVipItems().forEach((item, index) => {
+    const snippet = escapeHtml(vipGeneratedBlock(item));
+    const marker = `__VIP_BLOCK_${index}__`;
+    if (!output.includes(snippet)) return;
+    output = output.replace(snippet, marker);
+    markers.push({ marker, snippet: highlightVipBlock(snippet, vipColor(item)), color: vipColor(item) });
+  });
+  const dutSnippet = escapeHtml(dutBlock());
+  const dutMarker = "__DUT_BLOCK__";
+  if (output.includes(dutSnippet)) output = output.replace(dutSnippet, dutMarker);
   output = output
     .replace(/(--.*)$/gm, '<span class="code-comment">$1</span>')
     .replace(/\bp_sequencer\b/g, '<span class="code-sequencer">p_sequencer</span>')
@@ -553,6 +580,7 @@ function highlightGeneratedCode(text) {
   markers.forEach(({ marker, snippet, color }) => {
     output = output.replace(marker, `<span class="code-vip vip-color-${color}">${snippet}</span>`);
   });
+  output = output.replace(dutMarker, `<span class="code-dut">${highlightDutBlock(dutSnippet)}</span>`);
   return output;
 }
 
@@ -562,6 +590,10 @@ function highlightVipBlock(snippet, color) {
     if (/^\s*i\d+_[a-z0-9_]+\s*:\s*entity\s+/i.test(line)) return `<span class="code-vip-declaration vip-color-${color}">${line}</span>`;
     return line;
   }).join("\n");
+}
+
+function highlightDutBlock(snippet) {
+  return snippet.split("\n").map((line) => /^	*\s*--/.test(line) ? `<span class="code-comment">${line}</span>` : line).join("\n");
 }
 
 function downloadText(filename, content) {
@@ -583,8 +615,18 @@ function downloadBundle() {
 }
 
 function saveProject() {
-  downloadText(`${projectIdentifier()}.uvvm-tb-scaffold.json`, JSON.stringify(state, null, 2));
-  showToast("Project settings saved");
+  downloadBundle();
+}
+
+function setPaintColor(color) {
+  activePaintColor = activePaintColor === color ? null : color;
+  document.querySelectorAll("[data-vip-color]").forEach((swatch) => {
+    const active = swatch.dataset.vipColor === activePaintColor;
+    swatch.classList.toggle("active", active);
+    swatch.setAttribute("aria-pressed", String(active));
+  });
+  $("#architecture-map").classList.toggle("paint-mode", Boolean(activePaintColor));
+  if (activePaintColor) showToast(`${activePaintColor} paint selected; click VVCs to color them`);
 }
 
 function bindInputs() {
@@ -603,7 +645,7 @@ function bindInputs() {
       updatePreview();
     });
   });
-  ["include-clock", "include-reset", "include-activity-watchdog", "include-scoreboard"].forEach((elementId) => {
+  ["include-reset", "include-activity-watchdog", "include-scoreboard"].forEach((elementId) => {
     $(`#${elementId}`).addEventListener("change", (event) => {
       const stateKey = elementId.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
       state[stateKey] = event.target.checked;
@@ -618,16 +660,26 @@ function bindEvents() {
   document.addEventListener("click", (event) => {
     const codeThemeToggle = event.target.closest("#code-theme-toggle");
     if (codeThemeToggle) {
-      codeTheme = codeTheme === "dark" ? "light" : "dark";
-      $(".preview-panel").classList.toggle("code-theme-light", codeTheme === "light");
-      codeThemeToggle.textContent = codeTheme === "dark" ? "Light" : "Dark";
-      codeThemeToggle.title = `Switch code preview to ${codeTheme === "dark" ? "light" : "dark"} theme`;
-      codeThemeToggle.setAttribute("aria-pressed", String(codeTheme === "light"));
+      setCodeTheme(codeTheme === "dark" ? "light" : "dark");
+      return;
+    }
+    const colorSwatch = event.target.closest("[data-vip-color]");
+    if (colorSwatch) {
+      setPaintColor(colorSwatch.dataset.vipColor);
+      return;
+    }
+    const plus = event.target.closest("[data-drop-plus]");
+    if (plus) {
+      pendingPlacement = plus.dataset.dropPlus;
+      renderArchitectureMap();
+      showToast(`Choose a VIP to add to ${placementLabels[pendingPlacement]}`);
       return;
     }
     const addButton = event.target.closest("[data-add-protocol]");
     if (addButton) {
-      addProtocol(addButton.dataset.addProtocol);
+      const placement = pendingPlacement || "th";
+      addProtocol(addButton.dataset.addProtocol, placement);
+      pendingPlacement = null;
       renderProtocolPicker();
       renderArchitectureMap();
       updatePreview();
@@ -637,6 +689,14 @@ function bindEvents() {
     if (removeButton) {
       state.selected.splice(Number(removeButton.dataset.removePosition), 1);
       renderProtocolPicker();
+      renderArchitectureMap();
+      updatePreview();
+      return;
+    }
+    const paintTarget = event.target.closest("[data-vvc-position]");
+    if (activePaintColor && paintTarget && !event.target.closest("button, select, input")) {
+      const position = Number(paintTarget.dataset.vvcPosition);
+      if (state.selected[position]) state.selected[position].color = activePaintColor;
       renderArchitectureMap();
       updatePreview();
       return;
@@ -701,7 +761,9 @@ function bindEvents() {
   });
   document.addEventListener("dragleave", (event) => {
     const zone = event.target.closest("[data-drop-zone]");
+    const card = event.target.closest("[data-vvc-position]");
     if (zone && !zone.contains(event.relatedTarget)) zone.classList.remove("drag-over");
+    if (card && !card.contains(event.relatedTarget)) card.classList.remove("drag-over");
   });
   document.addEventListener("drop", (event) => {
     const card = event.target.closest("[data-vvc-position]");
@@ -711,10 +773,17 @@ function bindEvents() {
     (card || zone).classList.remove("drag-over");
     try {
       const payload = JSON.parse(event.dataTransfer.getData("application/x-uvvm-vvc"));
-      if (payload.type === "color" && card && state.selected[Number(card.dataset.vvcPosition)]) state.selected[Number(card.dataset.vvcPosition)].color = payload.color;
-      else if (!zone) return;
+      if (payload.type === "color") {
+        if (!card || !state.selected[Number(card.dataset.vvcPosition)]) return;
+        state.selected[Number(card.dataset.vvcPosition)].color = payload.color;
+        renderArchitectureMap();
+        updatePreview();
+        return;
+      }
+      if (!zone) return;
       if (payload.type === "protocol") addProtocol(payload.id, zone.dataset.dropZone);
       if (payload.type === "vvc" && state.selected[payload.position]) state.selected[payload.position].placement = zone.dataset.dropZone;
+      pendingPlacement = null;
       renderProtocolPicker();
       renderArchitectureMap();
       updatePreview();
@@ -764,3 +833,4 @@ function bindEvents() {
 bindInputs();
 bindEvents();
 refreshForm();
+setCodeTheme(codeTheme);

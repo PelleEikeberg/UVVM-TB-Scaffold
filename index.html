@@ -20,7 +20,7 @@
         </div>
         <div class="topbar-actions">
           <button class="button button-quiet button-action" id="load-project-button" title="Load a saved UVVM TB Scaffold project">Load project</button>
-          <button class="button button-primary button-action" id="save-project-button" title="Export the current project as JSON">Export project</button>
+          <button class="button button-primary button-action" id="save-project-button" title="Export the TB, TH, and project JSON">Export project</button>
           <input type="file" id="project-file-input" accept="application/json" hidden>
         </div>
       </header>
@@ -42,7 +42,7 @@
       <section class="section-block">
         <div class="section-heading">
           <div><p class="eyebrow">Project definition</p><h3>Give the workspace a shape</h3></div>
-          <span class="section-index">01 / 04</span>
+          <span class="section-index">01 / 03</span>
         </div>
         <div class="form-grid three-columns">
           <label class="field"><span>Project name</span><input id="project-name" value="uart_bridge_tb" spellcheck="false"><small>Used for generated entity and file names.</small></label>
@@ -59,7 +59,7 @@
       <section class="section-block" id="interfaces-section">
         <div class="section-heading">
           <div><p class="eyebrow">Graphical buildup</p><h3>Choose the VVCs around your DUT</h3></div>
-          <span class="section-index">02 / 04</span>
+          <span class="section-index">02 / 03</span>
         </div>
         <div class="interface-layout">
           <div class="protocol-picker">
@@ -67,36 +67,27 @@
             <div id="protocol-list" class="protocol-list"></div>
           </div>
           <div class="topology-panel">
-            <div class="topology-heading"><span>Live testbench layout</span><div class="topology-tools"><span class="paint-label">Change color:</span><div id="vip-color-palette" class="vip-color-palette" aria-label="Drag a color onto a VIP"><button class="color-swatch color-amber" data-vip-color="amber" draggable="true" title="Amber VIP color"></button><button class="color-swatch color-blue" data-vip-color="blue" draggable="true" title="Blue VIP color"></button><button class="color-swatch color-green" data-vip-color="green" draggable="true" title="Green VIP color"></button><button class="color-swatch color-purple" data-vip-color="purple" draggable="true" title="Purple VIP color"></button><button class="color-swatch color-coral" data-vip-color="coral" draggable="true" title="Coral VIP color"></button></div></div><span class="live-label"><i></i>Updates as you configure</span></div>
+            <div class="topology-heading"><span>Live testbench layout</span><div class="topology-tools"><span class="paint-label">Paint VVC:</span><div id="vip-color-palette" class="vip-color-palette" aria-label="Select a color to paint multiple VVCs"><button class="color-swatch color-amber" data-vip-color="amber" draggable="true" aria-pressed="false" title="Select amber paint color"></button><button class="color-swatch color-blue" data-vip-color="blue" draggable="true" aria-pressed="false" title="Select blue paint color"></button><button class="color-swatch color-green" data-vip-color="green" draggable="true" aria-pressed="false" title="Select green paint color"></button><button class="color-swatch color-purple" data-vip-color="purple" draggable="true" aria-pressed="false" title="Select purple paint color"></button><button class="color-swatch color-coral" data-vip-color="coral" draggable="true" aria-pressed="false" title="Select coral paint color"></button></div></div><span class="live-label"><i></i>Updates as you configure</span></div>
             <div class="architecture-map" id="architecture-map" aria-label="Live UVVM testbench topology"></div>
             <div class="map-legend"><span><i class="legend-swatch sequencer-swatch"></i>Sequencer</span><span><i class="legend-swatch harness-swatch"></i>Test harness</span><span><i class="legend-swatch vvc-swatch"></i>VVC</span><span><i class="legend-swatch dut-swatch"></i>DUT</span></div>
           </div>
         </div>
-        <div class="inline-note placement-note"><span class="note-icon">i</span><span>Drag a VIP to any <strong>+</strong> in the diagram. Drag a placed VVC again to move it. Instance number and AXI-Stream role stay on the VVC card.</span></div>
-      </section>
-
-      <section class="section-block" id="harness-section">
-        <div class="section-heading">
-          <div><p class="eyebrow">Harness architecture</p><h3>Decide what the starter owns</h3></div>
-          <span class="section-index">03 / 04</span>
-        </div>
-        <div class="option-grid">
-          <label class="toggle-row"><span class="toggle-copy"><strong>Clock generator VVC</strong><small>Generate a clock signal and a sequencer start call.</small></span><input type="checkbox" id="include-clock" checked><span class="toggle-ui"></span></label>
-          <label class="toggle-row"><span class="toggle-copy"><strong>Reset scaffold</strong><small>Declare <code>arst</code> and leave the polarity behavior explicit.</small></span><input type="checkbox" id="include-reset" checked><span class="toggle-ui"></span></label>
+        <div class="inline-note placement-note"><span class="note-icon">i</span><span>Drag a VIP to any <strong>+</strong> in the diagram. Click <strong>+</strong> and then choose a VIP to place it there. Drag a placed VVC again to move it. Instance number and AXI-Stream role stay on the VVC card.</span></div>
+        <div class="option-grid scaffold-options" aria-label="Optional generated scaffolds">
           <label class="toggle-row"><span class="toggle-copy"><strong>Activity watchdog</strong><small>Track the number of selected active VVCs in the harness.</small></span><input type="checkbox" id="include-activity-watchdog" checked><span class="toggle-ui"></span></label>
+          <label class="toggle-row"><span class="toggle-copy"><strong>Reset scaffold</strong><small>Declare <code>arst</code> and leave the polarity behavior explicit.</small></span><input type="checkbox" id="include-reset" checked><span class="toggle-ui"></span></label>
           <label class="toggle-row"><span class="toggle-copy"><strong>Scoreboard hooks</strong><small>Add a model process with a focused TODO region.</small></span><input type="checkbox" id="include-scoreboard" checked><span class="toggle-ui"></span></label>
         </div>
-        <div class="callout"><span class="callout-line"></span><div><strong>The DUT boundary is yours.</strong><p>TB Scaffold generates signals and a clearly marked port-map region, but it will never guess your RTL ports. That keeps the result honest and compiler-friendly after one focused edit.</p></div></div>
       </section>
 
       <section class="section-block output-block" id="output-section">
         <div class="section-heading">
           <div><p class="eyebrow">Generated workspace</p><h3>Review before you export</h3></div>
-          <span class="section-index">04 / 04</span>
+          <span class="section-index">03 / 03</span>
         </div>
         <div class="output-layout">
-          <div class="preview-panel">
-            <div class="preview-toolbar"><div class="file-tabs"><button class="file-tab active" data-file="tb">testbench.vhd</button><button class="file-tab" data-file="th">testharness.vhd</button></div><div class="preview-actions"><button id="code-theme-toggle" class="icon-button" title="Switch code preview to light theme" aria-pressed="false">Light</button><button id="copy-button" class="icon-button" title="Copy the selected VHDL file">Copy</button></div></div>
+          <div class="preview-panel code-theme-light">
+            <div class="preview-toolbar"><div class="file-tabs"><button class="file-tab active" data-file="tb">testbench.vhd</button><button class="file-tab" data-file="th">testharness.vhd</button></div><div class="preview-actions"><button id="code-theme-toggle" class="icon-button" title="Switch code preview to dark theme" aria-pressed="true">Dark</button><button id="copy-button" class="icon-button" title="Copy the selected VHDL file">Copy</button></div></div>
             <pre id="code-preview" class="code-preview" aria-label="Generated VHDL preview"></pre>
           </div>
           <aside class="generation-panel">

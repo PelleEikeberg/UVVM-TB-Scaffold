@@ -108,6 +108,8 @@ h3 { font-size: 22px; letter-spacing: -.045em; margin: 0; }
 .note-icon { align-items: center; border: 1px solid var(--orange); border-radius: 50%; color: var(--orange); display: flex; flex: 0 0 auto; font-family: Georgia, serif; font-size: 11px; height: 17px; justify-content: center; width: 17px; }
 
 .option-grid { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+.scaffold-options { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+.scaffold-options .toggle-row { min-height: 62px; padding: 11px 13px; }
 .toggle-row { align-items: center; border: 1px solid var(--line); display: flex; justify-content: space-between; min-height: 70px; padding: 13px 15px; }
 .toggle-copy { min-width: 0; }
 .toggle-copy strong, .toggle-copy small { display: block; }
@@ -382,7 +384,10 @@ h3 { font-size: 23px; letter-spacing: 0; }
 .drop-label { color: #918a81; flex: 0 0 auto; font-family: var(--mono); font-size: 7px; text-transform: uppercase; }
 .placed-vvcs { align-items: center; display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 6px; justify-content: center; min-width: 0; }
 .drop-plus { align-items: center; background: #fff; border: 1px solid #e39129; color: #cf7312; display: inline-flex; flex: 0 0 auto; font-size: 15px; font-weight: 600; height: 20px; justify-content: center; line-height: 1; width: 20px; }
+.drop-plus { cursor: pointer; font-family: var(--sans); padding: 0; }
 .drop-zone:hover .drop-plus, .drop-zone.drag-over .drop-plus { background: var(--orange); color: #fff; }
+.drop-zone.placement-target { background: #fff0d2; border-color: var(--accent); border-style: solid; }
+.drop-zone.placement-target .drop-plus { background: var(--accent); color: #fff; box-shadow: 0 0 0 3px rgba(255,159,46,.18); }
 .drop-zone-over { min-width: min(100%, 170px); }
 .drop-zone-th { min-width: 128px; }
 .drop-zone-tb { align-items: flex-start; flex-direction: column; }
@@ -442,6 +447,7 @@ h3 { font-size: 23px; letter-spacing: 0; }
   --vip-green: #168052;
   --vip-purple: #8152a0;
   --vip-coral: #c75546;
+  --dut-accent: #b13d73;
 }
 
 body { background-color: var(--page-background); color: var(--text-primary); font-size: var(--font-body); }
@@ -482,6 +488,8 @@ h3 { font-size: var(--font-section-heading); }
 .color-swatch.color-green { background: var(--vip-green); outline-color: var(--vip-green); }
 .color-swatch.color-purple { background: var(--vip-purple); outline-color: var(--vip-purple); }
 .color-swatch.color-coral { background: var(--vip-coral); outline-color: var(--vip-coral); }
+.color-swatch.active { box-shadow: 0 0 0 2px var(--text-primary), 0 0 0 4px #fff; }
+.architecture-map.paint-mode .topology-vvc { cursor: crosshair; }
 .topology-vvc > .remove-button { background: #fff; border: 1px solid currentColor; color: inherit; font-size: 14px; height: 18px; line-height: 14px; padding: 0; position: absolute; right: 4px; top: 4px; width: 18px; }
 .topology-vvc > .remove-button:hover { background: #b8483b; border-color: #b8483b; color: #fff; }
 .topology-vvc.vip-color-amber { background: #fff5df; border-color: var(--vip-amber); color: #84500b; }
@@ -525,6 +533,7 @@ h3 { font-size: var(--font-section-heading); }
 @media (max-width: 760px) {
   .interface-layout .protocol-picker, .interface-layout .topology-panel { height: auto; }
   .interface-layout .protocol-list { max-height: 360px; }
+  .scaffold-options { grid-template-columns: 1fr; }
 }
 
 /* Header, project note, and visible palette refinement. */
@@ -578,3 +587,8 @@ h3 { font-size: var(--font-section-heading); }
 .preview-panel.code-theme-light .code-vip-declaration.vip-color-green { color: #137345; }
 .preview-panel.code-theme-light .code-vip-declaration.vip-color-purple { color: #74469c; }
 .preview-panel.code-theme-light .code-vip-declaration.vip-color-coral { color: #ae4638; }
+.code-dut { border-left: 3px solid var(--dut-accent); box-decoration-break: clone; color: inherit; display: inline; }
+.map-node.dut-node, .dut-node { background: #fdebf3; border-color: var(--dut-accent); }
+.dut-node strong { color: #8e2d59; }
+.dut-node small { color: #a34f75; }
+.dut-swatch { background: #fdebf3; border-color: var(--dut-accent); }
