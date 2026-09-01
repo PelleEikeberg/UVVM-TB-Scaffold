@@ -15,16 +15,17 @@ Then open <http://localhost:8080>. To explore a complete configuration, load [fi
 ## What the layout controls
 
 - Project and DUT identifiers, clock timing, and watchdog timeout.
-- Drag-and-drop VVC placement in TH Free, SW Interface, Input, Output, Supplementary, or TB Free. The harness follows that order around the DUT.
+- Drag-and-drop VVC placement in TH Free, SW Interface, Input, Output, Supplementary, or TB Free. The first five placements are emitted in the harness around the DUT; TB Free VVCs are emitted in the testbench.
 - Per-VVC instance indices, AXI-Stream source/sink role, and five visual colors. Colors are saved with the project and make the matching preview block easy to find.
+- Click a `+` and then a VIP to place it in that lane, or select a palette color and click multiple VVC cards to paint them.
 - Optional clock generator, reset scaffold, activity watchdog, and scoreboard/model hook.
-- JSON export/import, independent TB/TH downloads, complete bundles, clipboard copy, and light/dark code-preview modes.
+- JSON export/import, independent TB/TH downloads, complete bundles from the top export action, clipboard copy, and light/dark code-preview modes.
 
 The initial example puts the clock-generator VVC in TH Free and the UART VVC at SW Interface. Imported projects without a placement normalize their clock VVC to TH Free as well.
 
 ## Generated VHDL
 
-The testbench contains UVVM imports, the harness instantiation, a general watchdog, UVVM initialization, a `p_sequencer` process, optional clock start, transaction TODOs, completion, and final alert reporting. The harness contains the UVVM engine, selected contexts and signals, VVC blocks ordered from the layout, a visible DUT boundary, and optional reset/watchdog/scoreboard scaffolding.
+The testbench contains UVVM imports, the harness instantiation, a general watchdog, UVVM initialization, a `p_sequencer` process, optional clock start, transaction TODOs, TB Free VVC blocks, completion, and final alert reporting. The harness contains the UVVM engine, selected contexts and signals for its five layout lanes, VVC blocks ordered from the layout, a visible DUT boundary, and optional reset/watchdog/scoreboard scaffolding.
 
 Native templates emit a documented VVC instance and a conservative starter interface. They still require a DUT port map and design-level transactions.
 
@@ -44,10 +45,10 @@ GPIO, Wishbone, Avalon-MM, Avalon-ST, AXI-Lite, AXI4, APB, and Ethernet intentio
 ## Recommended workflow
 
 1. Name the project and identify the intended DUT library/entity.
-2. Build the VVC topology, select instance numbers, and choose AXI-Stream directions.
+2. Build the VVC topology, select instance numbers, and choose AXI-Stream directions. Use `+` followed by a VIP click for click-to-place, and use a selected palette color to paint several VVC cards.
 3. Keep or remove the scaffolds the project needs.
 4. Review both previews, especially the color-marked VVC blocks and every `TODO`.
-5. Export the files and JSON profile.
+5. Export the files and JSON profile together from **Export project**, or download either VHDL file independently.
 6. Complete the DUT port map, protocol configuration, transactions, reset policy, and model behavior before compiling.
 
 The generator never fills in the last step automatically. That is deliberate: a visibly incomplete port map is safer than VHDL that compiles while validating the wrong interface.
