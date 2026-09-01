@@ -1,0 +1,18 @@
+{
+  "projectName": "fibonacci_axis",
+  "dutEntity": "fibonacci_axis",
+  "dutLibrary": "work",
+  "clockPeriod": "10",
+  "clockHighTime": "5",
+  "watchdogTimeout": "0.1",
+  "includeClock": true,
+  "includeReset": true,
+  "includeActivityWatchdog": true,
+  "includeScoreboard": true,
+  "selected": [
+    { "id": "clock_generator", "index": 1, "placement": "th", "color": "amber" },
+    { "id": "sbi", "index": 1, "placement": "over", "color": "blue" },
+    { "id": "axistream", "index": 1, "role": "source", "placement": "left", "color": "green" },
+    { "id": "axistream", "index": 2, "role": "sink", "placement": "right", "color": "coral" }
+  ]
+}

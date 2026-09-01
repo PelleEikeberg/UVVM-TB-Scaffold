@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generate a UVVM testbench and test harness starter project.">
+  <title>UVVM TB Scaffold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="main-content">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark"><span>U</span><span>V</span><span>V</span><span>M</span></div>
+          <div><p class="eyebrow">UVVM utility</p><h1>TB Scaffold</h1></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="button button-quiet button-action" id="load-project-button" title="Load a saved UVVM TB Scaffold project">Load project</button>
+          <button class="button button-primary button-action" id="save-project-button" title="Export the current project as JSON">Export project</button>
+          <input type="file" id="project-file-input" accept="application/json" hidden>
+        </div>
+      </header>
+
+      <section class="hero-section" id="project-section">
+        <div class="hero-copy-block hero-primary">
+          <p class="eyebrow accent-eyebrow">UVVM VVC framework</p>
+          <h2>Build the <em>right</em><br>testbench structure.</h2>
+          <p class="hero-copy">Choose VVCs, describe the DUT boundary, and generate a readable UVVM testbench and test harness pair.</p>
+          <div class="local-generation"><span></span><strong>Local TB generation</strong><small>Nothing leaves this browser</small></div>
+        </div>
+        <aside class="hero-rationale">
+          <p class="eyebrow">Why this tool</p>
+          <p>UVVM provides the verification building blocks; a new project still begins with repetitive wiring and decisions about where each VVC belongs.</p>
+          <p>TB Scaffold turns that first pass into a local visual layout and readable VHDL pair, while keeping the DUT map, widths, and test intent firmly in your hands.</p>
+        </aside>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div><p class="eyebrow">Project definition</p><h3>Give the workspace a shape</h3></div>
+          <span class="section-index">01 / 04</span>
+        </div>
+        <div class="form-grid three-columns">
+          <label class="field"><span>Project name</span><input id="project-name" value="uart_bridge_tb" spellcheck="false"><small>Used for generated entity and file names.</small></label>
+          <label class="field"><span>DUT entity</span><input id="dut-entity" value="your_dut" spellcheck="false"><small>The generated harness leaves its port map ready for you.</small></label>
+          <label class="field"><span>DUT library</span><input id="dut-library" value="work" spellcheck="false"><small>Usually <code>work</code>, or your compiled DUT library.</small></label>
+        </div>
+        <div class="form-grid three-columns timing-grid">
+          <label class="field"><span>Clock period</span><div class="input-with-suffix"><input id="clock-period" value="10"><span>ns</span></div></label>
+          <label class="field"><span>Clock high time</span><div class="input-with-suffix"><input id="clock-high-time" value="5"><span>ns</span></div></label>
+          <label class="field"><span>Watchdog timeout</span><div class="input-with-suffix"><input id="watchdog-timeout" value="1"><span>ms</span></div></label>
+        </div>
+      </section>
+
+      <section class="section-block" id="interfaces-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">Graphical buildup</p><h3>Choose the VVCs around your DUT</h3></div>
+          <span class="section-index">02 / 04</span>
+        </div>
+        <div class="interface-layout">
+          <div class="protocol-picker">
+            <div class="picker-label"><span>Available UVVM VIPs</span><span class="mono">Drag into the layout</span></div>
+            <div id="protocol-list" class="protocol-list"></div>
+          </div>
+          <div class="topology-panel">
+            <div class="topology-heading"><span>Live testbench layout</span><div class="topology-tools"><span class="paint-label">Change color:</span><div id="vip-color-palette" class="vip-color-palette" aria-label="Drag a color onto a VIP"><button class="color-swatch color-amber" data-vip-color="amber" draggable="true" title="Amber VIP color"></button><button class="color-swatch color-blue" data-vip-color="blue" draggable="true" title="Blue VIP color"></button><button class="color-swatch color-green" data-vip-color="green" draggable="true" title="Green VIP color"></button><button class="color-swatch color-purple" data-vip-color="purple" draggable="true" title="Purple VIP color"></button><button class="color-swatch color-coral" data-vip-color="coral" draggable="true" title="Coral VIP color"></button></div></div><span class="live-label"><i></i>Updates as you configure</span></div>
+            <div class="architecture-map" id="architecture-map" aria-label="Live UVVM testbench topology"></div>
+            <div class="map-legend"><span><i class="legend-swatch sequencer-swatch"></i>Sequencer</span><span><i class="legend-swatch harness-swatch"></i>Test harness</span><span><i class="legend-swatch vvc-swatch"></i>VVC</span><span><i class="legend-swatch dut-swatch"></i>DUT</span></div>
+          </div>
+        </div>
+        <div class="inline-note placement-note"><span class="note-icon">i</span><span>Drag a VIP to any <strong>+</strong> in the diagram. Drag a placed VVC again to move it. Instance number and AXI-Stream role stay on the VVC card.</span></div>
+      </section>
+
+      <section class="section-block" id="harness-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">Harness architecture</p><h3>Decide what the starter owns</h3></div>
+          <span class="section-index">03 / 04</span>
+        </div>
+        <div class="option-grid">
+          <label class="toggle-row"><span class="toggle-copy"><strong>Clock generator VVC</strong><small>Generate a clock signal and a sequencer start call.</small></span><input type="checkbox" id="include-clock" checked><span class="toggle-ui"></span></label>
+          <label class="toggle-row"><span class="toggle-copy"><strong>Reset scaffold</strong><small>Declare <code>arst</code> and leave the polarity behavior explicit.</small></span><input type="checkbox" id="include-reset" checked><span class="toggle-ui"></span></label>
+          <label class="toggle-row"><span class="toggle-copy"><strong>Activity watchdog</strong><small>Track the number of selected active VVCs in the harness.</small></span><input type="checkbox" id="include-activity-watchdog" checked><span class="toggle-ui"></span></label>
+          <label class="toggle-row"><span class="toggle-copy"><strong>Scoreboard hooks</strong><small>Add a model process with a focused TODO region.</small></span><input type="checkbox" id="include-scoreboard" checked><span class="toggle-ui"></span></label>
+        </div>
+        <div class="callout"><span class="callout-line"></span><div><strong>The DUT boundary is yours.</strong><p>TB Scaffold generates signals and a clearly marked port-map region, but it will never guess your RTL ports. That keeps the result honest and compiler-friendly after one focused edit.</p></div></div>
+      </section>
+
+      <section class="section-block output-block" id="output-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">Generated workspace</p><h3>Review before you export</h3></div>
+          <span class="section-index">04 / 04</span>
+        </div>
+        <div class="output-layout">
+          <div class="preview-panel">
+            <div class="preview-toolbar"><div class="file-tabs"><button class="file-tab active" data-file="tb">testbench.vhd</button><button class="file-tab" data-file="th">testharness.vhd</button></div><div class="preview-actions"><button id="code-theme-toggle" class="icon-button" title="Switch code preview to light theme" aria-pressed="false">Light</button><button id="copy-button" class="icon-button" title="Copy the selected VHDL file">Copy</button></div></div>
+            <pre id="code-preview" class="code-preview" aria-label="Generated VHDL preview"></pre>
+          </div>
+          <aside class="generation-panel">
+            <p class="eyebrow">Ready to generate</p>
+            <h4>Review the VHDL pair, then take it to your simulator.</h4>
+            <p class="generation-copy">Export each source independently, or keep the configuration with the complete project bundle.</p>
+            <div class="export-actions"><button id="download-tb" class="button button-secondary">Download TB</button><button id="download-th" class="button button-primary">Download TH</button></div>
+            <button id="download-bundle" class="text-button">Export project bundle <span>Ctrl + E</span></button>
+          </aside>
+        </div>
+      </section>
+      <footer class="page-footer"><span>UVVM TB Scaffold</span><span>Generated files are starter code. Run them through your simulator and review each TODO.</span></footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

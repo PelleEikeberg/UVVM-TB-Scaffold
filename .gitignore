@@ -1,0 +1,3 @@
+demo/fibonacci_axis/build/
+demo/fibonacci_axis/hdlregression/
+*.log
